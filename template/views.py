@@ -1,19 +1,23 @@
-from rest_framework.generics import CreateAPIView
+from rest_framework.generics import ListCreateAPIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.parsers import MultiPartParser
 from template.unzip import UnzipUploadedFile
 from template.validatezippedfilecontent import ValidateZippedFileContent
 from template.modules import rename_uploaded_file
 from template.serializer import TemplateSerializer
 from template.models import Template
+from template.remotestorage import upload_file_to_bucket
+from django.core.files.uploadedfile import TemporaryUploadedFile
 
 
-class TemplateView(CreateAPIView):
-    serializer_class = TemplateSerializer
+class TemplateView(ListCreateAPIView):
+
+    parser_classes = [MultiPartParser]
 
     def post(self, request, *args, **kwargs):
 
-        serialize_data = self.serializer_class(data=request.data)
+        serialize_data = TemplateSerializer(data=request.data, context={'request': request})
 
         if serialize_data.is_valid():
             uploaded_file = request.FILES['template_files']
@@ -24,13 +28,17 @@ class TemplateView(CreateAPIView):
 
             submitted_template_name = validated_file.validate_data_spec_file(uploaded_file)
 
-            unique_filename = rename_uploaded_file(uploaded_file)
+            modified_file = rename_uploaded_file(uploaded_file)
+
+            temp_upload_file = TemporaryUploadedFile(modified_file.name, 'zip', modified_file.size, 'utf-8')
+
+            upload_file_to_bucket(temp_upload_file.temporary_file_path(), modified_file.name)
 
             try:
 
                 Template.objects.create(
                     name=submitted_template_name,
-                    url="https://testaws.com"
+                    unique_name=modified_file.name
                 )
 
                 context = {
