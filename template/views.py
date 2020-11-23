@@ -7,7 +7,7 @@ from template.validatezippedfilecontent import ValidateZippedFileContent
 from template.modules import rename_uploaded_file
 from template.serializer import TemplateSerializer
 from template.models import Template
-from template.remotestorage import upload_file_to_bucket
+from template.remotestorage import upload_file_to_bucket , generate_signed_url_from_bucket
 from django.core.files.uploadedfile import TemporaryUploadedFile
 
 
@@ -15,9 +15,25 @@ class TemplateView(ListCreateAPIView):
 
     parser_classes = [MultiPartParser]
 
+    serializer_class = TemplateSerializer
+
+    def get_queryset(self):
+        data = []
+        templates = Template.objects.all()
+
+        for template in templates:
+
+            signed_url = generate_signed_url_from_bucket(template.unique_name)
+
+            data.append(
+                {'templateName': template.name, 'template_url': signed_url}
+            )
+
+        return data
+
     def post(self, request, *args, **kwargs):
 
-        serialize_data = TemplateSerializer(data=request.data, context={'request': request})
+        serialize_data = self.get_serializer_class()
 
         if serialize_data.is_valid():
             uploaded_file = request.FILES['template_files']
