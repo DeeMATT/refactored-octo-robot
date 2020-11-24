@@ -23,7 +23,7 @@ def validate_data_spec_attr(data):
     sub_attr_bag = []
 
     for data_spec_attr in data['dataspec']:
-        if not data_spec_attr.keys() >= {"field", "description", "required", 'required'}:
+        if not data_spec_attr.keys() >= {"field", "description", "required"}:
             raise ValidationError({'dataspec_error': f'{data_spec_attr} The dataspec array must have the following '
                                                      f'attributes, "field","description","required'})
         sub_attr_bag.append(data_spec_attr['field'])

@@ -35,3 +35,16 @@ def upload_file_to_bucket(file_path, s3_file_name):
         print('uploadFileToS3@Error')
         print(e)
         raise APIException(e)
+
+def delete_file_from_bucket(s3_file_name):
+    s3 = boto3.client('s3', aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+                      aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'))
+    try:
+           s3.delete_object(
+            Bucket=os.getenv('AWS_PUBLIC_S3_BUCKET_NAME'),
+            Key=s3_file_name
+        )
+    except Exception as e:
+        print('deletFileS3@Error')
+        print(e)
+        raise APIException(e)
