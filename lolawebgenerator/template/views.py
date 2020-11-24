@@ -1,4 +1,5 @@
 from rest_framework.generics import ListCreateAPIView
+from rest_framework.decorators import api_view, parser_classes
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.parsers import MultiPartParser
@@ -8,16 +9,17 @@ from template.modules import rename_uploaded_file
 from template.serializer import TemplateSerializer
 from template.models import Template
 from template.remotestorage import upload_file_to_bucket, generate_signed_url_from_bucket
-from django.core.files.uploadedfile import TemporaryUploadedFile
-import mimetypes
 
-class TemplateView(ListCreateAPIView):
+@api_view(['GET', 'POST'])
+@parser_classes([MultiPartParser])
+def templates(request):
+    if request.method == 'POST':
+        return  post_request_handler(request)
+    else:
+         return get_request_handler()
 
-    parser_classes = [MultiPartParser]
 
-    serializer_class = TemplateSerializer
-
-    def get_queryset(self):
+def get_request_handler():
         data = []
         templates = Template.objects.all()
 
@@ -29,11 +31,12 @@ class TemplateView(ListCreateAPIView):
                 {'templateName': template.name, 'template_url': signed_url}
             )
 
-        return data
+        return Response(data,status=status.HTTP_200_OK)
 
-    def post(self, request, *args, **kwargs):
 
-        serialize_data = self.serializer_class(data=request.data)
+def post_request_handler(request):
+
+        serialize_data = TemplateSerializer(data=request.data, context={'request':request})
 
         if serialize_data.is_valid():
             uploaded_file = request.FILES['template_files']

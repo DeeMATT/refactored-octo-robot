@@ -1,6 +1,6 @@
 from django.urls import path
-from template import views
+from template.views import templates
 
 urlpatterns = [
-    path("", views.TemplateView.as_view(), name="list.create.template")
+    path("", templates, name="list.create.templates")
 ]
