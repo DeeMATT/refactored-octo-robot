@@ -16,7 +16,7 @@ def generate_signed_url_from_bucket(s3_file_name):
         url = s3.generate_presigned_url('get_object',
                                         Params={'Bucket': os.getenv('AWS_PUBLIC_S3_BUCKET_NAME'),
                                                 'Key': s3_file_name},
-                                        ExpiresIn=int(os.getenv('SIGNED_URL_DURATION') * 1000)
+                                        ExpiresIn=int(os.getenv('SIGNED_URL_DURATION')) * 1000
                                         )
         return url
     except Exception as e:
@@ -26,7 +26,6 @@ def generate_signed_url_from_bucket(s3_file_name):
 
 
 def upload_file_to_bucket(file_path, s3_file_name):
-    print(os.getenv('AWS_SECRET_ACCESS_KEY'))
     s3 = boto3.client('s3', aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
                       aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'))
     try:

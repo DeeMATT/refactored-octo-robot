@@ -13,7 +13,7 @@ class UnzipUploadedFile:
         if is_zipfile(self.file):
             return self
         else:
-            raise ValidationError({'file_error': 'Template file must be in zipped format'})
+            raise ValidationError({'file_error': f'Template {self.file} file must be in zipped format'})
 
     def read_zipped_file(self):
         with ZipFile(self.file, 'r') as zipped_file:

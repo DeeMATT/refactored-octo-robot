@@ -9,7 +9,7 @@ from template.serializer import TemplateSerializer
 from template.models import Template
 from template.remotestorage import upload_file_to_bucket, generate_signed_url_from_bucket
 from django.core.files.uploadedfile import TemporaryUploadedFile
-
+import mimetypes
 
 class TemplateView(ListCreateAPIView):
 
@@ -46,9 +46,7 @@ class TemplateView(ListCreateAPIView):
 
             modified_file = rename_uploaded_file(uploaded_file)
 
-            temp_upload_file = TemporaryUploadedFile(modified_file.name, 'zip', modified_file.size, 'utf-8')
-
-            upload_file_to_bucket(temp_upload_file.temporary_file_path(), modified_file.name)
+            upload_file_to_bucket(modified_file.temporary_file_path(), modified_file.name)
 
             try:
 
