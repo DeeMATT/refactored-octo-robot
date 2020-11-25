@@ -1,5 +1,6 @@
 from zipfile import ZipFile, is_zipfile
 from rest_framework.exceptions import ValidationError
+from template.module import validation_error_handler
 
 
 class UnzipUploadedFile:
@@ -13,7 +14,7 @@ class UnzipUploadedFile:
         if is_zipfile(self.file):
             return self
         else:
-            raise ValidationError({'file_error': 'Template files must be in a zipped format'})
+            return  validation_error_handler({'file_error': 'Template files must be in a zipped format'})
 
     def read_zipped_file(self):
         with ZipFile(self.file, 'r') as zipped_file:

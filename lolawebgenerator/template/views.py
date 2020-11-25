@@ -4,7 +4,7 @@ from rest_framework import status
 from rest_framework.parsers import MultiPartParser
 from template.unzip import UnzipUploadedFile
 from template.validatezippedfilecontent import ValidateZippedFileContent
-from template.modules import rename_uploaded_file
+from template.module import rename_uploaded_template
 from template.serializer import TemplateSerializer
 from template.models import Template
 from template.remotestorage import upload_file_to_bucket, generate_signed_url_from_bucket, delete_file_from_bucket
@@ -39,28 +39,28 @@ def post_request_handler(request):
 
         if serialize_data.is_valid():
 
-            uploaded_file = request.FILES['template_files']
+            uploaded_template = request.FILES['template_files']
 
-            template_files = UnzipUploadedFile(uploaded_file).read_zipped_file()
+            read_template_files = UnzipUploadedFile(uploaded_template).read_zipped_file()
 
-            validated_file = ValidateZippedFileContent(template_files)
+            validated_template_content = ValidateZippedFileContent(read_template_files)
 
-            submitted_template_name = validated_file.validate_data_spec_file(uploaded_file)
+            submitted_template_name = validated_template_content.validate_data_spec_file(uploaded_template)
 
-            template_exists = is_template_existing(submitted_template_name,uploaded_file)
+            existing_template = is_template_existing(submitted_template_name,uploaded_template)
 
-            if template_exists['status']:
+            if existing_template['status']:
 
-                prepared_file = template_exists['mod_file']
+                prepared_file = existing_template['modified_file']
 
             else:
 
-                prepared_file = rename_uploaded_file(uploaded_file)
+                prepared_file = rename_uploaded_template(uploaded_template)
 
-            upload_file_to_bucket(uploaded_file.temporary_file_path(), prepared_file.name)
+            upload_file_to_bucket(uploaded_template.temporary_file_path(), prepared_file.name)
 
             try:
-                if not template_exists['status']:
+                if not existing_template['status']:
 
                     Template.objects.create(
                         name=submitted_template_name,
@@ -83,15 +83,15 @@ def post_request_handler(request):
             return Response(serialize_data.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-def is_template_existing(name, uploaded_file):
+def is_template_existing(name, uploaded_template):
     try:
         template = Template.objects.get(name=name)
 
-        uploaded_file.name = template.unique_name
+        uploaded_template.name = template.unique_name
 
         delete_file_from_bucket(template.unique_name)
 
-        context = {"status":True, "mod_file":uploaded_file}
+        context = {"status":True, "modified_file":uploaded_template}
 
         return context
 
