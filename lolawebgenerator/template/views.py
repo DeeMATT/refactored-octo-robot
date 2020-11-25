@@ -7,7 +7,12 @@ from template.validatezippedfilecontent import ValidateZippedFileContent
 from template.module import rename_uploaded_template
 from template.serializer import TemplateSerializer
 from template.models import Template
-from template.remotestorage import upload_file_to_bucket, generate_signed_url_from_bucket, delete_file_from_bucket
+from template.remotestorage import (upload_file_to_bucket,
+                                    generate_signed_url_from_bucket,
+                                    delete_file_from_bucket,
+                                    fetch_template_from_aws,
+                                    download_template_from_aws
+                                    )
 
 @api_view(['GET', 'POST'])
 @parser_classes([MultiPartParser])
@@ -27,7 +32,7 @@ def get_request_handler():
             signed_url = generate_signed_url_from_bucket(template.unique_name)
 
             data.append(
-                {'templateName': template.name, 'template_url': signed_url}
+                {'id':template.id, 'templateName': template.name, 'template_url': signed_url}
             )
 
         return Response(data,status=status.HTTP_200_OK)
@@ -100,3 +105,17 @@ def is_template_existing(name, uploaded_template):
         context = {"status":False}
 
         return context
+
+@api_view(['GET'])
+def template_detaspec(request, id):
+    try:
+         template = Template.objects.get(id=id)
+
+         downloaded_template_from_aws_bucket = download_template_from_aws(template.unique_name)
+
+         read_dataspec_content = UnzipUploadedFile(downloaded_template_from_aws_bucket).read_dataspec_file()
+
+         return Response(read_dataspec_content['dataspec'], status=status.HTTP_200_OK)
+
+    except Template.DoesNotExist:
+        return Response(f'Template with id {id} was not found', status=status.HTTP_404_NOT_FOUND)

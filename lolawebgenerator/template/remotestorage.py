@@ -2,7 +2,7 @@ import boto3
 import os
 from dotenv import load_dotenv
 from rest_framework.exceptions import APIException
-
+from django.conf import settings
 load_dotenv()
 
 
@@ -46,5 +46,37 @@ def delete_file_from_bucket(s3_file_name):
         )
     except Exception as e:
         print('deletFileS3@Error')
+        print(e)
+        raise APIException(e)
+
+
+def fetch_template_from_aws(s3_file_name):
+    s3 = boto3.client('s3', aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+                      aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'))
+    try:
+        s3.get_object(
+            Bucket=os.getenv('AWS_PUBLIC_S3_BUCKET_NAME'),
+            Key=s3_file_name
+        )
+    except Exception as e:
+        print('fetchFileS3@Error')
+        print(e)
+        raise APIException(e)
+
+def download_template_from_aws(s3_file_name):
+    s3 = boto3.client('s3', aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+                      aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'))
+    try:
+        file_path = f'{settings.BASE_DIR}tmp{s3_file_name}'
+
+        s3.download_file(
+            Bucket=os.getenv('AWS_PUBLIC_S3_BUCKET_NAME'),
+            Key=s3_file_name,
+            Filename=file_path
+        )
+        return file_path
+
+    except Exception as e:
+        print('downloadFileS3@Error')
         print(e)
         raise APIException(e)

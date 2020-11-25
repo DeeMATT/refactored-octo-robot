@@ -1,7 +1,7 @@
 from zipfile import ZipFile, is_zipfile
 from rest_framework.exceptions import ValidationError
 from template.module import validation_error_handler
-
+import json
 
 class UnzipUploadedFile:
     zipped_file = ''
@@ -20,4 +20,9 @@ class UnzipUploadedFile:
         with ZipFile(self.file, 'r') as zipped_file:
             self.zipped_file = zipped_file
             return zipped_file.namelist()
+
+    def read_dataspec_file(self):
+         with ZipFile(self.file) as zipped_file:
+            with zipped_file.open('dataspec.json') as data_spec:
+                return json.loads(data_spec.read())
 
