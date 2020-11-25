@@ -4,13 +4,13 @@ from rest_framework import status
 from rest_framework.parsers import MultiPartParser
 from template.unzip import UnzipUploadedFile
 from template.validatezippedfilecontent import ValidateZippedFileContent
-from template.module import rename_uploaded_template
+from template.module import rename_uploaded_template, delete_downloaded_templates
 from template.serializer import TemplateSerializer
+from django.conf import settings
 from template.models import Template
 from template.remotestorage import (upload_file_to_bucket,
                                     generate_signed_url_from_bucket,
                                     delete_file_from_bucket,
-                                    fetch_template_from_aws,
                                     download_template_from_aws
                                     )
 
@@ -106,6 +106,7 @@ def is_template_existing(name, uploaded_template):
 
         return context
 
+
 @api_view(['GET'])
 def template_detaspec(request, id):
     try:
@@ -114,6 +115,8 @@ def template_detaspec(request, id):
          downloaded_template_from_aws_bucket = download_template_from_aws(template.unique_name)
 
          read_dataspec_content = UnzipUploadedFile(downloaded_template_from_aws_bucket).read_dataspec_file()
+
+         delete_downloaded_templates(f'{settings.BASE_DIR}/downloadedtemplatefiles/*')
 
          return Response(read_dataspec_content['dataspec'], status=status.HTTP_200_OK)
 

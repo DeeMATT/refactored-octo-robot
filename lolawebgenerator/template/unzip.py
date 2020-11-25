@@ -22,7 +22,9 @@ class UnzipUploadedFile:
             return zipped_file.namelist()
 
     def read_dataspec_file(self):
-         with ZipFile(self.file) as zipped_file:
+        with ZipFile(self.file) as zipped_file:
             with zipped_file.open('dataspec.json') as data_spec:
                 return json.loads(data_spec.read())
+
+
 
