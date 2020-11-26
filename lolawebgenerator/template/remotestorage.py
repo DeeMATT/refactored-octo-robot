@@ -1,0 +1,78 @@
+import boto3
+import os, time
+from dotenv import load_dotenv
+from rest_framework.exceptions import APIException
+from django.conf import settings
+load_dotenv()
+
+
+def generate_signed_url_from_bucket(s3_file_name):
+    s3 = boto3.client('s3', aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+                      aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
+                      config=boto3.session.Config(signature_version='s3v4'),
+                      region_name=os.getenv('AWS_REGION')
+                      )
+    try:
+        url = s3.generate_presigned_url('get_object',
+                                        Params={'Bucket': os.getenv('AWS_PUBLIC_S3_BUCKET_NAME'),
+                                                'Key': s3_file_name},
+                                        ExpiresIn=int(os.getenv('SIGNED_URL_DURATION')) * 1000
+                                        )
+        return url
+    except Exception as e:
+        print('generateSignedUrlFromS3@Error')
+        print(e)
+        return ""
+
+
+def upload_file_to_bucket(file_path, s3_file_name):
+    s3 = boto3.client('s3', aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+                      aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'))
+    try:
+        s3.upload_file(
+            file_path, os.getenv('AWS_PUBLIC_S3_BUCKET_NAME'), s3_file_name)
+    except Exception as e:
+        print('uploadFileToS3@Error')
+        print(e)
+        raise APIException(e)
+
+def delete_file_from_bucket(s3_file_name):
+    s3 = boto3.client('s3', aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+                      aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'))
+    try:
+           s3.delete_object(
+            Bucket=os.getenv('AWS_PUBLIC_S3_BUCKET_NAME'),
+            Key=s3_file_name
+        )
+    except Exception as e:
+        print('deletFileS3@Error')
+        print(e)
+        raise APIException(e)
+
+
+def download_template_from_aws(s3_file_name):
+    s3 = boto3.client('s3', aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+                      aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'))
+    try:
+        '''
+        check if directory exist
+        '''
+        if not os.path.isdir(settings.DOWNLOADED_ZIPPED_FILES_DIR):
+            os.mkdir(settings.DOWNLOADED_ZIPPED_FILES_DIR)
+
+            downloaded_template_path = f'{settings.DOWNLOADED_ZIPPED_FILES_DIR}/{time.time()}{s3_file_name}'
+        else:
+            downloaded_template_path = f'{settings.DOWNLOADED_ZIPPED_FILES_DIR}/{time.time()}{s3_file_name}'
+
+        s3.download_file(
+            Bucket=os.getenv('AWS_PUBLIC_S3_BUCKET_NAME'),
+            Key=s3_file_name,
+            Filename=downloaded_template_path
+        )
+
+        return downloaded_template_path
+
+    except Exception as e:
+        print('downloadFileS3@Error')
+        print(e)
+        raise APIException(e)
