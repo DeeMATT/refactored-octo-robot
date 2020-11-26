@@ -1,12 +1,19 @@
 from rest_framework.decorators import api_view, parser_classes
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.parsers import MultiPartParser
+import mimetypes
+from rest_framework.parsers import MultiPartParser, JSONParser
 from template.unzip import UnzipUploadedFile
 from template.validatezippedfilecontent import ValidateZippedFileContent
-from template.module import rename_uploaded_template, delete_downloaded_templates
+from template.module import (rename_uploaded_template, 
+                                delete_downloaded_templates, 
+                                generateLinearDictionaryOfTemplate,
+                                replace_template_placeholders,
+                                validate_submitted_data_spec,
+                                zip_modified_template
+                                )
 from template.serializer import TemplateSerializer
-from django.conf import settings
+from django.shortcuts import HttpResponse
 from template.models import Template
 from template.remotestorage import (upload_file_to_bucket,
                                     generate_signed_url_from_bucket,
@@ -116,9 +123,44 @@ def template_detaspec(request, id):
 
          read_dataspec_content = UnzipUploadedFile(downloaded_template_from_aws_bucket).read_dataspec_file()
 
-         delete_downloaded_templates(f'{settings.BASE_DIR}/downloadedtemplatefiles/*')
+         delete_downloaded_templates([downloaded_template_from_aws_bucket])
 
          return Response(read_dataspec_content['dataspec'], status=status.HTTP_200_OK)
 
     except Template.DoesNotExist:
         return Response(f'Template with id {id} was not found', status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['POST'])
+@parser_classes([JSONParser])
+def process_template(request, id):
+    valid_submitted_data_spec = validate_submitted_data_spec(request)
+
+    try:
+         template = Template.objects.get(id=id)
+
+         downloaded_template_from_aws_bucket = download_template_from_aws(template.unique_name)
+
+         extracted_files_dir = UnzipUploadedFile(downloaded_template_from_aws_bucket).extract_zipped_file()
+
+         finalOutput =  generateLinearDictionaryOfTemplate(extracted_files_dir)
+
+         replace_template_placeholders(finalOutput, valid_submitted_data_spec)
+
+         processed_template = zip_modified_template(template.name, extracted_files_dir)
+
+         return file_download(processed_template, template.name)
+
+    except Template.DoesNotExist:
+        return Response(f'Template with id {id} was not found', status=status.HTTP_404_NOT_FOUND)
+
+def file_download(template, name):
+     file = open(f'{template}.zip', encoding="latin-1", errors='ignore')
+
+     mimetype = mimetypes.guess_type(template)
+
+     response = HttpResponse(file.read(), content_type =mimetype)
+
+     response["Content-Disposition"]= "attachment; filename=%s" % name
+
+     return response

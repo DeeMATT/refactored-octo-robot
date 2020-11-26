@@ -1,5 +1,5 @@
 import boto3
-import os
+import os, time
 from dotenv import load_dotenv
 from rest_framework.exceptions import APIException
 from django.conf import settings
@@ -54,7 +54,15 @@ def download_template_from_aws(s3_file_name):
     s3 = boto3.client('s3', aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
                       aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'))
     try:
-        downloaded_template_path = f'{settings.BASE_DIR}/downloadedtemplatefiles/{s3_file_name}'
+        '''
+        check if directory exist
+        '''
+        if not os.path.isdir(settings.DOWNLOADED_ZIPPED_FILES_DIR):
+            os.mkdir(settings.DOWNLOADED_ZIPPED_FILES_DIR)
+
+            downloaded_template_path = f'{settings.DOWNLOADED_ZIPPED_FILES_DIR}/{time.time()}{s3_file_name}'
+        else:
+            downloaded_template_path = f'{settings.DOWNLOADED_ZIPPED_FILES_DIR}/{time.time()}{s3_file_name}'
 
         s3.download_file(
             Bucket=os.getenv('AWS_PUBLIC_S3_BUCKET_NAME'),

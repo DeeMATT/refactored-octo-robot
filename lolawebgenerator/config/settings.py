@@ -32,6 +32,11 @@ ALLOWED_HOSTS = []
 
 APPEND_SLASH = False
 
+DOWNLOADED_ZIPPED_FILES_DIR = f'{BASE_DIR}/downloadedtemplatesfiles/'
+
+EXTRACTED_FILES_DIR = f'{BASE_DIR}/extractedfiles/'
+
+PROCESSED_TEMPLATES_DIR = f'{BASE_DIR}/processedtemplates/'
 
 # Application definition
 

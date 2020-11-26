@@ -1,9 +1,8 @@
 from zipfile import ZipFile
-import json
-from template.module import validation_error_handler
+from template.module import validation_error_handler, transform_json_to_dict
 
 def is_data_spec_file_valid(data):
-    data_spec_file = json.loads(data.read())
+    data_spec_file = transform_json_to_dict(data.read())
 
     validate_template_name(data_spec_file)
 

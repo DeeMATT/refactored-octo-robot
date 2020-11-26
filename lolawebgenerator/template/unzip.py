@@ -2,6 +2,9 @@ from zipfile import ZipFile, is_zipfile
 from rest_framework.exceptions import ValidationError
 from template.module import validation_error_handler
 import json
+import os
+import time
+from django.conf import settings
 
 class UnzipUploadedFile:
     zipped_file = ''
@@ -25,6 +28,24 @@ class UnzipUploadedFile:
         with ZipFile(self.file) as zipped_file:
             with zipped_file.open('dataspec.json') as data_spec:
                 return json.loads(data_spec.read())
+
+    def extract_zipped_file(self):
+         '''
+        check if directory exist
+        '''
+         if not os.path.isdir(settings.EXTRACTED_FILES_DIR):
+             os.mkdir(settings.EXTRACTED_FILES_DIR)
+             file_path = f'{settings.EXTRACTED_FILES_DIR}/{time.time()}'
+         else:
+            file_path = f'{settings.EXTRACTED_FILES_DIR}/{time.time()}'
+
+         with ZipFile(self.file) as zipped_file:
+            zipped_file.extractall(file_path)
+         '''
+        delete downloaded file
+        '''
+         os.remove(self.file)
+         return file_path
 
 
 
