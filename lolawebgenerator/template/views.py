@@ -117,15 +117,15 @@ def is_template_existing(name, uploaded_template):
 @api_view(['GET'])
 def template_detaspec(request, id):
     try:
-         template = Template.objects.get(id=id)
+        template = Template.objects.get(id=id)
 
-         downloaded_template_from_aws_bucket = download_template_from_aws(template.unique_name)
+        downloaded_template_from_aws_bucket = download_template_from_aws(template.unique_name)
 
-         read_dataspec_content = UnzipUploadedFile(downloaded_template_from_aws_bucket).read_dataspec_file()
+        read_dataspec_content = UnzipUploadedFile(downloaded_template_from_aws_bucket).read_dataspec_file()
 
-         delete_downloaded_template(downloaded_template_from_aws_bucket)
+        delete_downloaded_template(downloaded_template_from_aws_bucket)
 
-         return Response(read_dataspec_content['dataspec'], status=status.HTTP_200_OK)
+        return Response(read_dataspec_content['dataspec'], status=status.HTTP_200_OK)
 
     except Template.DoesNotExist:
         return Response(f'Template with id {id} was not found', status=status.HTTP_404_NOT_FOUND)
@@ -138,30 +138,30 @@ def process_template(request, id):
     valid_submitted_data_spec = validate_submitted_data_spec(request)
 
     try:
-         template = Template.objects.get(id=id)
+        template = Template.objects.get(id=id)
 
-         downloaded_template_from_aws_bucket = download_template_from_aws(template.unique_name)
+        downloaded_template_from_aws_bucket = download_template_from_aws(template.unique_name)
 
-         extracted_files_dir = UnzipUploadedFile(downloaded_template_from_aws_bucket).extract_zipped_file()
+        extracted_files_dir = UnzipUploadedFile(downloaded_template_from_aws_bucket).extract_zipped_file()
 
-         finalOutput =  generateLinearDictionaryOfTemplate(extracted_files_dir)
+        finalOutput =  generateLinearDictionaryOfTemplate(extracted_files_dir)
 
-         replace_template_placeholders(finalOutput, valid_submitted_data_spec)
+        replace_template_placeholders(finalOutput, valid_submitted_data_spec)
 
-         processed_template = zip_modified_template(template.name, extracted_files_dir)
+        processed_template = zip_modified_template(template.name, extracted_files_dir)
 
-         return file_download(processed_template, template.name)
+        return file_download(processed_template, template.name)
 
     except Template.DoesNotExist:
         return Response(f'Template with id {id} was not found', status=status.HTTP_404_NOT_FOUND)
 
 def file_download(template, name):
-     file = open(f'{template}.zip', encoding="latin-1", errors='ignore')
+    file = open(f'{template}.zip', encoding="latin-1", errors='ignore')
 
-     mimetype = mimetypes.guess_type(template)
+    mimetype = mimetypes.guess_type(template)
 
-     response = HttpResponse(file.read(), content_type =mimetype)
+    response = HttpResponse(file.read(), content_type =mimetype)
 
-     response["Content-Disposition"]= "attachment; filename=%s" % name
+    response["Content-Disposition"]= "attachment; filename=%s" % name
 
-     return response
+    return response
