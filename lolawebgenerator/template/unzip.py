@@ -1,8 +1,6 @@
 from zipfile import ZipFile, is_zipfile
-from rest_framework.exceptions import ValidationError
-from template.module import validation_error_handler
+from template.module import validation_error_handler, delete_downloaded_template
 import json
-import os
 import time
 from django.conf import settings
 
@@ -44,7 +42,7 @@ class UnzipUploadedFile:
          '''
         delete downloaded file
         '''
-         os.remove(self.file)
+         delete_downloaded_template(self.file)
          return file_path
 
 

@@ -6,7 +6,7 @@ from rest_framework.parsers import MultiPartParser, JSONParser
 from template.unzip import UnzipUploadedFile
 from template.validatezippedfilecontent import ValidateZippedFileContent
 from template.module import (rename_uploaded_template, 
-                                delete_downloaded_templates, 
+                                delete_downloaded_template, 
                                 generateLinearDictionaryOfTemplate,
                                 replace_template_placeholders,
                                 validate_submitted_data_spec,
@@ -123,7 +123,7 @@ def template_detaspec(request, id):
 
          read_dataspec_content = UnzipUploadedFile(downloaded_template_from_aws_bucket).read_dataspec_file()
 
-         delete_downloaded_templates([downloaded_template_from_aws_bucket])
+         delete_downloaded_template(downloaded_template_from_aws_bucket)
 
          return Response(read_dataspec_content['dataspec'], status=status.HTTP_200_OK)
 
@@ -134,6 +134,7 @@ def template_detaspec(request, id):
 @api_view(['POST'])
 @parser_classes([JSONParser])
 def process_template(request, id):
+
     valid_submitted_data_spec = validate_submitted_data_spec(request)
 
     try:
