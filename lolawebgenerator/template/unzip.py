@@ -1,7 +1,7 @@
 from zipfile import ZipFile, is_zipfile
 from template.module import validation_error_handler, delete_downloaded_template
 import json
-import time
+import time,os
 from django.conf import settings
 
 class UnzipUploadedFile:

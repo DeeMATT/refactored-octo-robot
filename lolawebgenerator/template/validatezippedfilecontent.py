@@ -34,6 +34,7 @@ def validate_data_spec_attr(data):
 
 class ValidateZippedFileContent:
     def __init__(self, template_files):
+
         self.template_files = template_files
         if isinstance(self.template_files, list):
             if 'index.html' not in self.template_files:

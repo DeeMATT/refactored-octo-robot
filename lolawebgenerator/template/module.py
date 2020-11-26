@@ -61,7 +61,7 @@ def generateLinearDictionaryOfTemplate(providedPath):
 
 def replace_template_placeholders(files, valid_dataspec):
     for file in files:
-        open_file = open(file,'r')
+        open_file = open(file,'r', encoding="latin-1", errors='ignore')
         file_content_to_string = open_file.read()
         for k,v in valid_dataspec['dataspec'].items():
                 pattern = re.compile(k, re.IGNORECASE)
@@ -70,7 +70,7 @@ def replace_template_placeholders(files, valid_dataspec):
         write_to_file(file_content_to_string, file)
 
 def write_to_file(file_content_to_string, file):
-        new_file = open(file,'w')
+        new_file = open(file,'w', encoding="latin-1", errors='ignore')
         new_file.write(file_content_to_string)
         new_file.close()
 
