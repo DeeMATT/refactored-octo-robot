@@ -15,7 +15,7 @@ def rename_uploaded_template(file):
     return file
 
 def delete_downloaded_template(file:list):
-        os.remove(file)
+    os.remove(file)
 
 def validation_error_handler(message):
     raise ValidationError(message)

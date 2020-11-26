@@ -38,13 +38,13 @@ class ValidateZippedFileContent:
         self.template_files = template_files
         if isinstance(self.template_files, list):
             if 'index.html' not in self.template_files:
-               return validation_error_handler({'file_error': 'Please the template must have an index.html file'})
+                raise validation_error_handler({'file_error': 'Please the template must have an index.html file'})
             if 'css/' not in self.template_files:
-                return validation_error_handler({'file_error': 'Please the template must have a css folder'})
+                raise validation_error_handler({'file_error': 'Please the template must have a css folder'})
             if 'js/' not in self.template_files:
-               return validation_error_handler({'file_error': 'Please the template must have a js folder'})
+                raise validation_error_handler({'file_error': 'Please the template must have a js folder'})
             if 'dataspec.json' not in self.template_files:
-               return validation_error_handler({'file_error': 'Please the template must have a dataspec.json file'})
+                raise validation_error_handler({'file_error': 'Please the template must have a dataspec.json file'})
 
     @staticmethod
     def validate_data_spec_file(template):
