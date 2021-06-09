@@ -63,9 +63,9 @@ def replace_template_placeholders(files, valid_dataspec):
     for file in files:
         open_file = open(file,'r', encoding="latin-1", errors='ignore')
         file_content_to_string = open_file.read()
-        for k,v in valid_dataspec['dataspec'].items():
-                pattern = re.compile(k, re.IGNORECASE)
-                file_content_to_string = pattern.sub(v, file_content_to_string)
+        for k, v in valid_dataspec['dataspec'].items():
+            pattern = re.compile(k, re.IGNORECASE)
+            file_content_to_string = pattern.sub(v, file_content_to_string)
         open_file.close()
         write_to_file(file_content_to_string, file)
 
