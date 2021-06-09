@@ -12,9 +12,10 @@ def is_data_spec_file_valid(data):
 
 
 def validate_template_name(data):
-    if 'templateName' not in data and data['templateName']:
-       return validation_error_handler({'dataspec_error': 'The dataspec.json file has not templateName attribute and '
-                                                 'it must not be empty'})
+    if 'templateName' not in data or not data['templateName']:
+       return validation_error_handler({
+                                "dataspec_error": "The dataspec.json file has no templateName attribute and it must not be empty"
+                                })
 
 
 def validate_data_spec_attr(data):
@@ -22,8 +23,9 @@ def validate_data_spec_attr(data):
 
     for data_spec_attr in data['dataspec']:
         if not data_spec_attr.keys() >= {"field", "description", "required"}:
-           return validation_error_handler({'dataspec_error': f'{data_spec_attr} The dataspec array must have the following '
-                                                     f'attributes, "field","description","required'})
+           return validation_error_handler({
+                                "dataspec_error": f"{data_spec_attr} -- The dataspec array must have the following attributes: <<field, description, required>>"
+                                })
         sub_attr_bag.append(data_spec_attr['field'])
 
     for field in sub_attr_bag:
