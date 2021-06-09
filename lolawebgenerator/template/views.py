@@ -25,9 +25,9 @@ from template.remotestorage import (upload_file_to_bucket,
 @parser_classes([MultiPartParser])
 def templates(request):
     if request.method == 'POST':
-        return  post_request_handler(request)
+        return post_request_handler(request)
     else:
-         return get_request_handler()
+        return get_request_handler()
 
 
 def get_request_handler():
@@ -39,7 +39,7 @@ def get_request_handler():
             signed_url = generate_signed_url_from_bucket(template.unique_name)
 
             data.append(
-                {'id':template.id, 'templateName': template.name, 'template_url': signed_url}
+                {'id': template.id, 'templateName': template.name, 'template_url': signed_url}
             )
 
         return Response(data,status=status.HTTP_200_OK)
@@ -59,7 +59,7 @@ def post_request_handler(request):
 
             submitted_template_name = validated_template_content.validate_data_spec_file(uploaded_template)
 
-            existing_template = is_template_existing(submitted_template_name,uploaded_template)
+            existing_template = is_template_existing(submitted_template_name, uploaded_template)
 
             if existing_template['status']:
 
@@ -103,13 +103,13 @@ def is_template_existing(name, uploaded_template):
 
         delete_file_from_bucket(template.unique_name)
 
-        context = {"status":True, "modified_file":uploaded_template}
+        context = {"status": True, "modified_file": uploaded_template}
 
         return context
 
     except Template.DoesNotExist:
 
-        context = {"status":False}
+        context = {"status": False}
 
         return context
 
@@ -154,6 +154,7 @@ def process_template(request, id):
 
     except Template.DoesNotExist:
         return Response(f'Template with id {id} was not found', status=status.HTTP_404_NOT_FOUND)
+
 
 def file_download(template, name):
     file = open(f'{template}.zip', encoding="latin-1", errors='ignore')
