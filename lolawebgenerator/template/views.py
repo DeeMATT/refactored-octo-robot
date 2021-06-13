@@ -47,7 +47,7 @@ def get_request_handler():
 
 def post_request_handler(request):
 
-        serialize_data = TemplateSerializer(data=request.data, context={'request':request})
+        serialize_data = TemplateSerializer(data=request.data, context={'request': request})
 
         if serialize_data.is_valid():
 
