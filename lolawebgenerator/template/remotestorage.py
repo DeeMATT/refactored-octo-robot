@@ -7,16 +7,18 @@ load_dotenv()
 
 
 def generate_signed_url_from_bucket(s3_file_name):
-    s3 = boto3.client('s3', aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-                      aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
-                      config=boto3.session.Config(signature_version='s3v4'),
-                      region_name=os.getenv('AWS_REGION')
-                      )
+    s3 = boto3.client('s3', 
+                    endpoint_url=settings.BUCKET_ENDPOINT_URL,
+                    aws_access_key_id=settings.BUCKET_ACCESS_KEY_ID,
+                    aws_secret_access_key=settings.BUCKET_SECRET_KEY,
+                    config=boto3.session.Config(signature_version='s3v4'),
+                    region_name=settings.BUCKET_REGION_NAME
+                    )
     try:
         url = s3.generate_presigned_url('get_object',
-                                        Params={'Bucket': os.getenv('AWS_PUBLIC_S3_BUCKET_NAME'),
+                                        Params={'Bucket': os.getenv('BUCKET_NAME'),
                                                 'Key': s3_file_name},
-                                        ExpiresIn=int(os.getenv('SIGNED_URL_DURATION')) * 1000
+                                        ExpiresIn=int(os.getenv('DURATION')) * 1000
                                         )
         return url
     except Exception as e:
@@ -26,11 +28,15 @@ def generate_signed_url_from_bucket(s3_file_name):
 
 
 def upload_file_to_bucket(file_path, s3_file_name):
-    s3 = boto3.client('s3', aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-                      aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'))
+    s3 = boto3.client('s3', 
+                    endpoint_url=settings.BUCKET_ENDPOINT_URL,
+                    aws_access_key_id=settings.BUCKET_ACCESS_KEY_ID,
+                    aws_secret_access_key=settings.BUCKET_SECRET_KEY,
+                    region_name=settings.BUCKET_REGION_NAME
+                    )
     try:
         s3.upload_file(
-            file_path, os.getenv('AWS_PUBLIC_S3_BUCKET_NAME'), s3_file_name)
+            file_path, os.getenv('BUCKET_NAME'), s3_file_name)
     except Exception as e:
         print('uploadFileToS3@Error')
         print(e)
@@ -38,11 +44,15 @@ def upload_file_to_bucket(file_path, s3_file_name):
 
 
 def delete_file_from_bucket(s3_file_name):
-    s3 = boto3.client('s3', aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-                      aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'))
+    s3 = boto3.client('s3', 
+                    endpoint_url=settings.BUCKET_ENDPOINT_URL,
+                    aws_access_key_id=settings.BUCKET_ACCESS_KEY_ID,
+                    aws_secret_access_key=settings.BUCKET_SECRET_KEY,
+                    region_name=settings.BUCKET_REGION_NAME
+                    )
     try:
            s3.delete_object(
-            Bucket=os.getenv('AWS_PUBLIC_S3_BUCKET_NAME'),
+            Bucket=os.getenv('BUCKET_NAME'),
             Key=s3_file_name
         )
     except Exception as e:
@@ -52,8 +62,12 @@ def delete_file_from_bucket(s3_file_name):
 
 
 def download_template_from_aws(s3_file_name):
-    s3 = boto3.client('s3', aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-                      aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'))
+    s3 = boto3.client('s3', 
+                    endpoint_url=settings.BUCKET_ENDPOINT_URL,
+                    aws_access_key_id=settings.BUCKET_ACCESS_KEY_ID,
+                    aws_secret_access_key=settings.BUCKET_SECRET_KEY,
+                    region_name=settings.BUCKET_REGION_NAME
+                    )
     try:
         '''
         check if directory exist
@@ -64,7 +78,7 @@ def download_template_from_aws(s3_file_name):
         downloaded_template_path = f'{settings.DOWNLOADED_ZIPPED_FILES_DIR}/{time.time()}{s3_file_name}'
 
         s3.download_file(
-            Bucket=os.getenv('AWS_PUBLIC_S3_BUCKET_NAME'),
+            Bucket=os.getenv('BUCKET_NAME'),
             Key=s3_file_name,
             Filename=downloaded_template_path
         )
