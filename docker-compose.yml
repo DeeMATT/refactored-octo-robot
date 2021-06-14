@@ -3,7 +3,7 @@ services:
 
   api: 
     build: .
-    image: &lola_stg lola-web-generator
+    image: &lola_gen lola-web-generator
     container_name: lola-web-generator
     restart: always
     command: ["daphne", "-b", "0.0.0.0", "-p", "9010", "config.asgi:application"]
