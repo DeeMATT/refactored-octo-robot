@@ -1,0 +1,12 @@
+
+version: '3'
+services:
+
+  api: 
+    build: .
+    image: &lola_stg lola-web-generator
+    container_name: lola-web-generator
+    restart: always
+    command: ["daphne", "-b", "0.0.0.0", "-p", "9010", "config.asgi:application"]
+    ports:
+      - 9010:9010
