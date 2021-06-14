@@ -35,6 +35,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = True
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS').split(',')
+DURATION = os.getenv('DURATION')
 
 APPEND_SLASH = False
 
