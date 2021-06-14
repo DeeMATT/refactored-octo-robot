@@ -16,9 +16,9 @@ def generate_signed_url_from_bucket(s3_file_name):
                     )
     try:
         url = s3.generate_presigned_url('get_object',
-                                        Params={'Bucket': os.getenv('BUCKET_NAME'),
+                                        Params={'Bucket': settings.BUCKET_NAME,
                                                 'Key': s3_file_name},
-                                        ExpiresIn=int(os.getenv('DURATION')) * 1000
+                                        ExpiresIn=int(settings.DURATION) * 1000
                                         )
         return url
     except Exception as e:
@@ -36,7 +36,7 @@ def upload_file_to_bucket(file_path, s3_file_name):
                     )
     try:
         s3.upload_file(
-            file_path, os.getenv('BUCKET_NAME'), s3_file_name)
+            file_path, settings.BUCKET_NAME, s3_file_name)
     except Exception as e:
         print('uploadFileToS3@Error')
         print(e)
@@ -52,7 +52,7 @@ def delete_file_from_bucket(s3_file_name):
                     )
     try:
            s3.delete_object(
-            Bucket=os.getenv('BUCKET_NAME'),
+            Bucket=settings.BUCKET_NAME,
             Key=s3_file_name
         )
     except Exception as e:
@@ -78,7 +78,7 @@ def download_template_from_aws(s3_file_name):
         downloaded_template_path = f'{settings.DOWNLOADED_ZIPPED_FILES_DIR}/{time.time()}{s3_file_name}'
 
         s3.download_file(
-            Bucket=os.getenv('BUCKET_NAME'),
+            Bucket=settings.BUCKET_NAME,
             Key=s3_file_name,
             Filename=downloaded_template_path
         )
