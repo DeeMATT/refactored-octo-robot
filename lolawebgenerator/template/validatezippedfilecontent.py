@@ -22,7 +22,7 @@ def validate_data_spec_attr(data):
     sub_attr_bag = []
 
     for data_spec_attr in data['dataspec']:
-        if not data_spec_attr.keys() >= {"field", "description", "required"}:
+        if not data_spec_attr.keys() >= {"field", "description"}:
            return validation_error_handler({
                                 "dataspec_error": f"{data_spec_attr} -- The dataspec array must have the following attributes: <<field, description, required>>"
                                 })
@@ -39,13 +39,20 @@ class ValidateZippedFileContent:
 
         self.template_files = template_files
         if isinstance(self.template_files, list):
-            if 'index.html' not in self.template_files:
+            _template_files = list()
+            for x in self.template_files:
+                if '/' in x:
+                    x = x.split('/')[0]
+                if x not in _template_files:
+                    _template_files.append(x)
+
+            if 'index.html' not in _template_files:
                 raise validation_error_handler({'file_error': 'Please the template must have an index.html file'})
-            if 'css/' not in self.template_files:
+            if 'css' not in _template_files:
                 raise validation_error_handler({'file_error': 'Please the template must have a css folder'})
-            if 'js/' not in self.template_files:
+            if 'js' not in _template_files:
                 raise validation_error_handler({'file_error': 'Please the template must have a js folder'})
-            if 'dataspec.json' not in self.template_files:
+            if 'dataspec.json' not in _template_files:
                 raise validation_error_handler({'file_error': 'Please the template must have a dataspec.json file'})
 
     @staticmethod
