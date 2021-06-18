@@ -51,7 +51,8 @@ def post_request_handler(request):
 
         if serialize_data.is_valid():
 
-            uploaded_template = request.FILES['template_files']
+            uploaded_template = request.FILES.get('template_files')
+            template_screenshot = request.FILES.get('template_screen')
 
             read_template_files = UnzipUploadedFile(uploaded_template).read_zipped_file()
 
@@ -68,7 +69,7 @@ def post_request_handler(request):
             else:
 
                 prepared_file = rename_uploaded_template(uploaded_template)
-
+            
             upload_file_to_bucket(uploaded_template.temporary_file_path(), prepared_file.name)
 
             try:
@@ -76,7 +77,8 @@ def post_request_handler(request):
 
                     Template.objects.create(
                         name=submitted_template_name,
-                        unique_name=prepared_file.name
+                        unique_name=prepared_file.name,
+                        screenshot=template_screenshot.name
                     )
 
                 context = {
