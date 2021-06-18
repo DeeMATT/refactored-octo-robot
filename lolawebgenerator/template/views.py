@@ -37,12 +37,18 @@ def get_request_handler():
         for template in templates:
 
             signed_url = generate_signed_url_from_bucket(template.unique_name)
+            screen_url = generate_signed_url_from_bucket(template.screenshot)
 
             data.append(
-                {'id': template.id, 'templateName': template.name, 'template_url': signed_url}
+                {
+                    'id': template.id, 
+                    'templateName': template.name, 
+                    'template_url': signed_url, 
+                    'screen_url': screen_url
+                }
             )
 
-        return Response(data,status=status.HTTP_200_OK)
+        return Response(data, status=status.HTTP_200_OK)
 
 
 def post_request_handler(request):
@@ -60,7 +66,7 @@ def post_request_handler(request):
 
             submitted_template_name = validated_template_content.validate_data_spec_file(uploaded_template)
 
-            existing_template = is_template_existing(submitted_template_name, uploaded_template)
+            existing_template = is_template_existing(submitted_template_name, template_screenshot.name, uploaded_template)
 
             if existing_template['status']:
 
@@ -69,8 +75,9 @@ def post_request_handler(request):
             else:
 
                 prepared_file = rename_uploaded_template(uploaded_template)
-            
+
             upload_file_to_bucket(uploaded_template.temporary_file_path(), prepared_file.name)
+            upload_file_to_bucket(template_screenshot.temporary_file_path(), template_screenshot.name)
 
             try:
                 if not existing_template['status']:
@@ -97,13 +104,19 @@ def post_request_handler(request):
             return Response(serialize_data.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-def is_template_existing(name, uploaded_template):
+def is_template_existing(name, screen_name, uploaded_template):
     try:
         template = Template.objects.get(name=name)
 
         uploaded_template.name = template.unique_name
-
+        
         delete_file_from_bucket(template.unique_name)
+        if template.screenshot:
+            delete_file_from_bucket(template.screenshot)
+
+        # update
+        template.screenshot = screen_name
+        template.save()
 
         context = {"status": True, "modified_file": uploaded_template}
 
