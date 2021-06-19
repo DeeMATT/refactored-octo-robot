@@ -93,7 +93,8 @@ def zip_modified_template(filename, extracted_template_dir):
 
         return processed_template_path
 
-
-
-
-
+def uploadFileToLocal(file, localPath):
+    with open(localPath, 'wb+') as destination:
+        for chunk in file.chunks():
+            destination.write(chunk)
+    return True

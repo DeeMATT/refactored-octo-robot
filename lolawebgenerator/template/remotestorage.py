@@ -34,6 +34,9 @@ def upload_file_to_bucket(file_path, s3_file_name, content_type):
                     aws_secret_access_key=settings.BUCKET_SECRET_KEY,
                     region_name=settings.BUCKET_REGION_NAME
                     )
+
+    if content_type == None:
+        content_type = ""
     try:
         s3.upload_file(
             file_path, 
