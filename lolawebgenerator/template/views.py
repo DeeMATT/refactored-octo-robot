@@ -20,6 +20,7 @@ from template.remotestorage import (upload_file_to_bucket,
                                     delete_file_from_bucket,
                                     download_template_from_aws
                                     )
+from django.conf import settings
 
 @api_view(['GET', 'POST'])
 @parser_classes([MultiPartParser])
@@ -75,9 +76,11 @@ def post_request_handler(request):
             else:
 
                 prepared_file = rename_uploaded_template(uploaded_template)
-
-            upload_file_to_bucket(uploaded_template.temporary_file_path(), prepared_file.name)
-            upload_file_to_bucket(template_screenshot.temporary_file_path(), template_screenshot.name)
+            
+            mimetype = mimetypes.guess_type(uploaded_template.name)[0]
+            upload_file_to_bucket(uploaded_template.temporary_file_path(), prepared_file.name, content_type=mimetype)
+            mimetype = mimetypes.guess_type(template_screenshot.name)[0]
+            upload_file_to_bucket(template_screenshot.temporary_file_path(), template_screenshot.name, content_type=mimetype)
 
             try:
                 if not existing_template['status']:
@@ -130,7 +133,7 @@ def is_template_existing(name, screen_name, uploaded_template):
 
 
 @api_view(['GET'])
-def template_detaspec(request, id):
+def template_dataspec(request, id):
     try:
         template = Template.objects.get(id=id)
 
@@ -174,10 +177,40 @@ def process_template(request, id):
 def file_download(template, name):
     file = open(f'{template}.zip', encoding="latin-1", errors='ignore')
 
-    mimetype = mimetypes.guess_type(template)
-
-    response = HttpResponse(file.read(), content_type =mimetype)
-
-    response["Content-Disposition"]= "attachment; filename=%s" % name
+    mimetype = mimetypes.guess_type(template)[0]
+    response = HttpResponse(file.read(), content_type=mimetype)
+    response["Content-Disposition"] = "attachment; filename=%s" % name
 
     return response
+
+@api_view(['POST'])
+@parser_classes([JSONParser])
+def upload_processed_template(request, domain):
+    serialize_data = TemplateSerializer(data=request.data, context={'request': request})
+
+    if serialize_data.is_valid():
+        template = request.FILES.get('processed_template')
+        # extract content
+        extracted_files_dir = UnzipUploadedFile(template).read_zipped_file()
+        ValidateZippedFileContent(extracted_files_dir)
+        finalOutput =  generateLinearDictionaryOfTemplate(extracted_files_dir)
+        
+        # upload
+        for filePath in finalOutput:
+            mimetype = mimetypes.guess_type(filePath)[0]
+            upload_file_to_bucket(filePath, domain, content_type=mimetype)
+
+        # generate url
+        bucket_endpoint = settings.BUCKET_ENDPOINT_URL
+        bucket_name = settings.BUCKET_NAME
+
+        if not bucket_endpoint.endswith('/'):
+            bucket_endpoint = bucket_endpoint + '/'
+        
+        template_url = f"{bucket_endpoint}{bucket_name}/{domain}/"
+        data = {
+            "domain": domain,
+            "template_url": template_url
+        }
+        
+        return Response(data, status=status.HTTP_200_OK)
