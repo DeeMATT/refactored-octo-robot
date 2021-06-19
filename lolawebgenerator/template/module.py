@@ -24,18 +24,17 @@ def validate_submitted_data_spec(request):
     json_payload_to_dict = transform_json_to_dict(request.body)
 
     if 'dataspec' not in json_payload_to_dict:
-        massage =  {
-        "error" : "The dataspec json payload should be in the format below",
-        "format": {
-	    "dataspec": {
-		"@#Home#@": "Homepage Navbar",
-		"@#Here#@": "Here Navbar",
-		"@#Logo#@": "Our cool logo"
-	    }
-
-        }
-        }
-        return validation_error_handler(massage)
+        message =  {
+            "error" : "The dataspec json payload should be in the format below",
+            "format": {
+                "dataspec": {
+                    "@#Home#@": "Homepage Navbar",
+                    "@#Here#@": "Here Navbar",
+                    "@#Logo#@": "Our cool logo"
+                    }
+                }
+            }
+        return validation_error_handler(message)
     else:
         return json_payload_to_dict
 
