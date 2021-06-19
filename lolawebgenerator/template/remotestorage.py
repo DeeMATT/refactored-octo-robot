@@ -27,7 +27,7 @@ def generate_signed_url_from_bucket(s3_file_name):
         return ""
 
 
-def upload_file_to_bucket(file_path, s3_file_name):
+def upload_file_to_bucket(file_path, s3_file_name, content_type):
     s3 = boto3.client('s3', 
                     endpoint_url=settings.BUCKET_ENDPOINT_URL,
                     aws_access_key_id=settings.BUCKET_ACCESS_KEY_ID,
@@ -36,7 +36,14 @@ def upload_file_to_bucket(file_path, s3_file_name):
                     )
     try:
         s3.upload_file(
-            file_path, settings.BUCKET_NAME, s3_file_name)
+            file_path, 
+            settings.BUCKET_NAME, 
+            s3_file_name,
+            ExtraArgs={
+                'ContentType': content_type,
+                'ACL': 'public-read'
+                }
+            )
     except Exception as e:
         print('uploadFileToS3@Error')
         print(e)
