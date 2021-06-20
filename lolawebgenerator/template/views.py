@@ -211,8 +211,10 @@ def upload_processed_template(request, domain):
                 folderPath = folder + 'css/'
             elif filePath.endswith('.js'):
                 folderPath = folder + 'js/'
-            else:
+            elif filePath.endswith('.html'):
                 folderPath = folder
+            else:
+                folderPath = folder + 'assets/'
             
             fileName = os.path.basename(filePath)
             s3FileName = f"{folderPath}{fileName}"
