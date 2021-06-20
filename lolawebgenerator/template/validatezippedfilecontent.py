@@ -52,6 +52,8 @@ class ValidateZippedFileContent:
                 raise validation_error_handler({'file_error': 'Please the template must have a css folder'})
             if 'js' not in _template_files:
                 raise validation_error_handler({'file_error': 'Please the template must have a js folder'})
+            if 'assets' not in _template_files:
+                raise validation_error_handler({'file_error': 'Please the template must have an assets folder'})
             if 'dataspec.json' not in _template_files:
                 raise validation_error_handler({'file_error': 'Please the template must have a dataspec.json file'})
 
