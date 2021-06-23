@@ -34,6 +34,13 @@ def upload_file_to_bucket(file_path, s3_file_name, content_type):
                     aws_secret_access_key=settings.BUCKET_SECRET_KEY,
                     region_name=settings.BUCKET_REGION_NAME
                     )
+    extraArgs = {
+            'ACL': 'public-read'
+        }
+    if content_type:
+        extraArgs.update({
+            'ContentType': content_type,
+        })
 
     if content_type == None:
         content_type = ""
@@ -42,10 +49,7 @@ def upload_file_to_bucket(file_path, s3_file_name, content_type):
             file_path, 
             settings.BUCKET_NAME, 
             s3_file_name,
-            ExtraArgs={
-                'ContentType': content_type,
-                'ACL': 'public-read'
-                }
+            ExtraArgs=extraArgs
             )
     except Exception as e:
         print('uploadFileToS3@Error')
