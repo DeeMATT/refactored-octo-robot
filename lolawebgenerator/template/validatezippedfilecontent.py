@@ -48,6 +48,8 @@ class ValidateZippedFileContent:
 
             if 'index.html' not in _template_files:
                 raise validation_error_handler({'file_error': 'Please the template must have an index.html file'})
+            if 'preview.html' not in _template_files:
+                raise validation_error_handler({'file_error': 'Please the template must have an index.html file'})
             if 'css' not in _template_files:
                 raise validation_error_handler({'file_error': 'Please the template must have a css folder'})
             if 'js' not in _template_files:
