@@ -98,3 +98,9 @@ def uploadFileToLocal(file, localPath):
         for chunk in file.chunks():
             destination.write(chunk)
     return True
+
+def delete_dir(directory):
+    try:
+        shutil.rmtree(directory)
+    except OSError as e:
+        print("Error: %s : %s" % (directory, e.strerror))

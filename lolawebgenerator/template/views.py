@@ -5,25 +5,27 @@ import mimetypes
 import os
 from datetime import datetime
 from rest_framework.parsers import MultiPartParser, JSONParser
-from template.unzip import UnzipUploadedFile
-from template.validatezippedfilecontent import ValidateZippedFileContent
-from template.module import (rename_uploaded_template, 
+from .unzip import UnzipUploadedFile
+from .validatezippedfilecontent import ValidateZippedFileContent
+from .module import (rename_uploaded_template, 
                                 delete_downloaded_template, 
                                 generateLinearDictionaryOfTemplate,
                                 replace_template_placeholders,
                                 validate_submitted_data_spec,
                                 zip_modified_template,
-                                uploadFileToLocal
+                                uploadFileToLocal,
+                                delete_dir
                                 )
-from template.serializer import TemplateSerializer
+from .serializer import TemplateSerializer
 from django.shortcuts import HttpResponse
-from template.models import Template
-from template.remotestorage import (upload_file_to_bucket,
+from .models import Template
+from .remotestorage import (upload_file_to_bucket,
                                     generate_signed_url_from_bucket,
                                     delete_file_from_bucket,
                                     download_template_from_aws
                                     )
 from django.conf import settings
+
 
 @api_view(['GET', 'POST'])
 @parser_classes([MultiPartParser])
@@ -112,6 +114,9 @@ def post_request_handler(request):
                 s3FileName = f"{folderPath}{fileName}"
                 upload_file_to_bucket(filePath, s3FileName, content_type=mimetype)
 
+            # delete directory to free memory space
+            delete_dir(extracted_files_dir)
+
             try:
                 if not existing_template['status']:
 
@@ -191,6 +196,9 @@ def process_template(request, id):
 
         processed_template = zip_modified_template(template.name, extracted_files_dir)
 
+        # delete directory to free memory space
+        delete_dir(extracted_files_dir)
+
         return file_download(processed_template, template.name)
 
     except Template.DoesNotExist:
@@ -239,6 +247,9 @@ def upload_processed_template(request, domain):
             fileName = os.path.basename(filePath)
             s3FileName = f"{folderPath}{fileName}"
             upload_file_to_bucket(filePath, s3FileName, content_type=mimetype)
+    
+        # delete directory to free memory space
+        delete_dir(extracted_files_dir)
 
         # generate url
         bucket_endpoint = settings.BUCKET_ENDPOINT_URL
