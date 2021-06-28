@@ -228,7 +228,7 @@ def upload_processed_template(request, domain):
 
         ValidateZippedFileContent(read_template_files)
         
-        extracted_files_dir = UnzipUploadedFile(template_name).extract_zipped_file()
+        extracted_files_dir = UnzipUploadedFile(template).extract_zipped_file()
         finalOutput =  generateLinearDictionaryOfTemplate(extracted_files_dir)
 
         # upload

@@ -14,7 +14,7 @@ def rename_uploaded_template(file):
     file.name = f'{time.time()}.zip'
     return file
 
-def delete_downloaded_template(file:list):
+def delete_downloaded_template(file):
     os.remove(file)
 
 def validation_error_handler(message):
