@@ -43,7 +43,7 @@ def get_request_handler():
         for template in templates:
             name_path = template.unique_name.replace('.', '_')
             folder = f"lola_web_templates/{name_path}"
-            template_path = f"{folder}/{template.name}"
+            template_path = f"{folder}/{template.name}.zip"
             screen_path = f"{folder}/{template.screenshot}"
             signed_url = generate_signed_url_from_bucket(template_path)
             screen_url = generate_signed_url_from_bucket(screen_path)
