@@ -41,7 +41,8 @@ def get_request_handler():
         templates = Template.objects.all()
 
         for template in templates:
-            folder = f"lola_web_templates/{template.unique_name}"
+            name_path = template.unique_name.replace('.', '_')
+            folder = f"lola_web_templates/{name_path}"
             file_path = f"{folder}/{template.name}"
             signed_url = generate_signed_url_from_bucket(file_path)
 
@@ -91,11 +92,12 @@ def post_request_handler(request):
                 prepared_file = rename_uploaded_template(uploaded_template)
             
             mimetype = mimetypes.guess_type(uploaded_template.name)[0]
-            folder = f"lola_web_templates/{prepared_file.name}/"
+            name_path = prepared_file.name.replace('.', '_')
+            folder = f"lola_web_templates/{name_path}/"
             folder_path = f"{folder}{submitted_template_name}"
             upload_file_to_bucket(uploaded_template.temporary_file_path(), folder_path, content_type=mimetype)
 
-            extracted_files_dir = UnzipUploadedFile(uploaded_template).extract_zipped_file()
+            extracted_files_dir = UnzipUploadedFile(uploaded_template.temporary_file_path()).extract_zipped_file()
             finalOutput =  generateLinearDictionaryOfTemplate(extracted_files_dir)
 
             # upload
