@@ -75,7 +75,7 @@ def delete_file_from_bucket(s3_file_name):
         raise APIException(e)
 
 
-def download_template_from_aws(s3_file_name):
+def download_template_from_aws(s3_file_name, folder):
     s3 = boto3.client('s3', 
                     endpoint_url=settings.BUCKET_ENDPOINT_URL,
                     aws_access_key_id=settings.BUCKET_ACCESS_KEY_ID,
@@ -86,10 +86,10 @@ def download_template_from_aws(s3_file_name):
         '''
         check if directory exist
         '''
-        if not os.path.isdir(settings.DOWNLOADED_ZIPPED_FILES_DIR):
-            os.mkdir(settings.DOWNLOADED_ZIPPED_FILES_DIR)
+        if not os.path.isdir(f"{settings.DOWNLOADED_ZIPPED_FILES_DIR}/{folder}"):
+            os.makedirs(f"{settings.DOWNLOADED_ZIPPED_FILES_DIR}/{folder}")
 
-        downloaded_template_path = f'{settings.DOWNLOADED_ZIPPED_FILES_DIR}/{time.time()}{s3_file_name}'
+        downloaded_template_path = f'{settings.DOWNLOADED_ZIPPED_FILES_DIR}{s3_file_name}'
 
         s3.download_file(
             Bucket=settings.BUCKET_NAME,

@@ -94,7 +94,9 @@ def post_request_handler(request):
             mimetype = mimetypes.guess_type(uploaded_template.name)[0]
             name_path = prepared_file.name.replace('.', '_')
             folder = f"lola_web_templates/{name_path}/"
-            folder_path = f"{folder}{submitted_template_name}"
+            
+            submitted_template_name = submitted_template_name.replace(' ', '_')
+            folder_path = f"{folder}{submitted_template_name}.zip"
             upload_file_to_bucket(uploaded_template.temporary_file_path(), folder_path, content_type=mimetype)
 
             extracted_files_dir = UnzipUploadedFile(uploaded_template.temporary_file_path()).extract_zipped_file()
@@ -167,10 +169,13 @@ def template_dataspec(request, id):
     try:
         template = Template.objects.get(id=id)
 
-        downloaded_template_from_aws_bucket = download_template_from_aws(template.unique_name)
+        name_path = template.unique_name.replace('.', '_')
+        folder_path = f"lola_web_templates/{name_path}/"
+        file_path = f"{folder_path}{template.name}.zip"
 
+        downloaded_template_from_aws_bucket = download_template_from_aws(file_path, folder_path)
         read_dataspec_content = UnzipUploadedFile(downloaded_template_from_aws_bucket).read_dataspec_file()
-
+        
         delete_downloaded_template(downloaded_template_from_aws_bucket)
 
         return Response(read_dataspec_content['dataspec'], status=status.HTTP_200_OK)
