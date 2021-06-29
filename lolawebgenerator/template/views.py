@@ -43,8 +43,10 @@ def get_request_handler():
         for template in templates:
             name_path = template.unique_name.replace('.', '_')
             folder = f"lola_web_templates/{name_path}"
-            file_path = f"{folder}/{template.name}"
-            signed_url = generate_signed_url_from_bucket(file_path)
+            template_path = f"{folder}/{template.name}"
+            screen_path = f"{folder}/{template.screenshot}"
+            signed_url = generate_signed_url_from_bucket(template_path)
+            screen_url = generate_signed_url_from_bucket(screen_path)
 
             # generate url
             bucket_endpoint = settings.BUCKET_ENDPOINT_URL
@@ -60,6 +62,7 @@ def get_request_handler():
                     'id': template.id, 
                     'templateName': template.name, 
                     'template_url': signed_url, 
+                    'screen_url': screen_url,
                     'preview_url': preview_url
                 }
             )
@@ -74,6 +77,7 @@ def post_request_handler(request):
         if serialize_data.is_valid():
 
             uploaded_template = request.FILES.get('template_files')
+            template_screenshot = request.FILES.get('template_screen')
 
             read_template_files = UnzipUploadedFile(uploaded_template).read_zipped_file()
 
@@ -81,7 +85,7 @@ def post_request_handler(request):
 
             submitted_template_name = validated_template_content.validate_data_spec_file(uploaded_template)
 
-            existing_template = is_template_existing(submitted_template_name, uploaded_template)
+            existing_template = is_template_existing(submitted_template_name, template_screenshot.name, uploaded_template)
 
             if existing_template['status']:
 
@@ -96,9 +100,15 @@ def post_request_handler(request):
             folder = f"lola_web_templates/{name_path}/"
             
             submitted_template_name = submitted_template_name.replace(' ', '_')
-            folder_path = f"{folder}{submitted_template_name}.zip"
-            upload_file_to_bucket(uploaded_template.temporary_file_path(), folder_path, content_type=mimetype)
+            zip_file_path = f"{folder}{submitted_template_name}.zip"
+            upload_file_to_bucket(uploaded_template.temporary_file_path(), zip_file_path, content_type=mimetype)
 
+            # screenshot
+            mimetype = mimetypes.guess_type(template_screenshot.name)[0]
+            screen_file_path = f"{folder}{template_screenshot.name}"
+            upload_file_to_bucket(template_screenshot.temporary_file_path(), screen_file_path, content_type=mimetype)
+
+            # extract files
             extracted_files_dir = UnzipUploadedFile(uploaded_template.temporary_file_path()).extract_zipped_file()
             finalOutput =  generateLinearDictionaryOfTemplate(extracted_files_dir)
 
@@ -127,6 +137,7 @@ def post_request_handler(request):
                     Template.objects.create(
                         name=submitted_template_name,
                         unique_name=prepared_file.name,
+                        screenshot=template_screenshot.name
                     )
 
                 context = {
@@ -145,13 +156,20 @@ def post_request_handler(request):
             return Response(serialize_data.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-def is_template_existing(name, uploaded_template):
+def is_template_existing(name, screen_name, uploaded_template):
     try:
         template = Template.objects.get(name=name)
 
         uploaded_template.name = template.unique_name
         
         delete_file_from_bucket(template.unique_name)
+        if template.screenshot:
+            delete_file_from_bucket(template.screenshot)
+
+        # update
+        template.screenshot = screen_name
+        template.save()
+
 
         context = {"status": True, "modified_file": uploaded_template}
 
@@ -175,7 +193,7 @@ def template_dataspec(request, id):
 
         downloaded_template_from_aws_bucket = download_template_from_aws(file_path, folder_path)
         read_dataspec_content = UnzipUploadedFile(downloaded_template_from_aws_bucket).read_dataspec_file()
-        
+
         delete_downloaded_template(downloaded_template_from_aws_bucket)
 
         return Response(read_dataspec_content['dataspec'], status=status.HTTP_200_OK)
