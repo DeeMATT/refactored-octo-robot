@@ -8,7 +8,6 @@ from rest_framework.parsers import MultiPartParser, JSONParser
 from .unzip import UnzipUploadedFile
 from .validatezippedfilecontent import ValidateZippedFileContent
 from .module import (rename_uploaded_template, 
-                                delete_downloaded_template, 
                                 generateLinearDictionaryOfTemplate,
                                 replace_template_placeholders,
                                 validate_submitted_data_spec,
@@ -25,6 +24,8 @@ from .remotestorage import (upload_file_to_bucket,
                                     download_template_from_aws
                                     )
 from django.conf import settings
+from template.module import delete_downloaded_template
+
 
 
 @api_view(['GET', 'POST'])
@@ -79,20 +80,20 @@ def post_request_handler(request):
             uploaded_template = request.FILES.get('template_files')
             template_screenshot = request.FILES.get('template_screen')
 
-            read_template_files = UnzipUploadedFile(uploaded_template).read_zipped_file()
+            local_template = (str(datetime.now().timestamp()) + uploaded_template.name).replace(" ", "")
+            uploadFileToLocal(uploaded_template, local_template)
+
+            read_template_files = UnzipUploadedFile(local_template).read_zipped_file()
 
             validated_template_content = ValidateZippedFileContent(read_template_files)
+        
+            submitted_template_name = validated_template_content.validate_data_spec_file(local_template)
 
-            submitted_template_name = validated_template_content.validate_data_spec_file(uploaded_template)
-
-            existing_template = is_template_existing(submitted_template_name, template_screenshot.name, uploaded_template)
+            existing_template = is_template_existing(submitted_template_name, template_screenshot.name, local_template)
 
             if existing_template['status']:
-
                 prepared_file = existing_template['modified_file']
-
             else:
-
                 prepared_file = rename_uploaded_template(uploaded_template)
             
             mimetype = mimetypes.guess_type(uploaded_template.name)[0]
@@ -101,15 +102,19 @@ def post_request_handler(request):
             
             submitted_template_name = submitted_template_name.replace(' ', '_')
             zip_file_path = f"{folder}{submitted_template_name}.zip"
-            upload_file_to_bucket(uploaded_template.temporary_file_path(), zip_file_path, content_type=mimetype)
+            upload_file_to_bucket(local_template, zip_file_path, content_type=mimetype)
 
             # screenshot
             mimetype = mimetypes.guess_type(template_screenshot.name)[0]
             screen_file_path = f"{folder}{template_screenshot.name}"
-            upload_file_to_bucket(template_screenshot.temporary_file_path(), screen_file_path, content_type=mimetype)
+            local_screen_name = (str(datetime.now().timestamp()) + template_screenshot.name).replace(" ", "")
+            uploadFileToLocal(template_screenshot, local_screen_name)
+
+            upload_file_to_bucket(local_screen_name, screen_file_path, content_type=mimetype)
+
 
             # extract files
-            extracted_files_dir = UnzipUploadedFile(uploaded_template).extract_zipped_file()
+            extracted_files_dir = UnzipUploadedFile(local_template).extract_zipped_file()
             finalOutput =  generateLinearDictionaryOfTemplate(extracted_files_dir)
 
             # upload
@@ -130,6 +135,8 @@ def post_request_handler(request):
 
             # delete directory to free memory space
             delete_dir(extracted_files_dir)
+            # delete screenshot
+            delete_downloaded_template(local_screen_name)
 
             try:
                 if not existing_template['status']:
@@ -160,16 +167,19 @@ def is_template_existing(name, screen_name, uploaded_template):
     try:
         template = Template.objects.get(name=name)
 
-        uploaded_template.name = template.unique_name
-        
-        delete_file_from_bucket(template.unique_name)
+        name_path = template.unique_name.replace('.', '_')
+        folder = f"lola_web_templates/{name_path}"
+        template_path = f"{folder}/{template.name}.zip"
+                
+        delete_file_from_bucket(template_path)
+
         if template.screenshot:
-            delete_file_from_bucket(template.screenshot)
+            screen_path = f"{folder}/{template.screenshot}"
+            delete_file_from_bucket(screen_path)
 
         # update
         template.screenshot = screen_name
         template.save()
-
 
         context = {"status": True, "modified_file": uploaded_template}
 
@@ -194,7 +204,7 @@ def template_dataspec(request, id):
         downloaded_template_from_aws_bucket = download_template_from_aws(file_path, folder_path)
         read_dataspec_content = UnzipUploadedFile(downloaded_template_from_aws_bucket).read_dataspec_file()
 
-        delete_downloaded_template(downloaded_template_from_aws_bucket)
+        delete_dir(f"{settings.DOWNLOADED_ZIPPED_FILES_DIR}/{folder_path}")
 
         return Response(read_dataspec_content['dataspec'], status=status.HTTP_200_OK)
 
