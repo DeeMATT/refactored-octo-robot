@@ -109,7 +109,7 @@ def post_request_handler(request):
             upload_file_to_bucket(template_screenshot.temporary_file_path(), screen_file_path, content_type=mimetype)
 
             # extract files
-            extracted_files_dir = UnzipUploadedFile(uploaded_template.temporary_file_path()).extract_zipped_file()
+            extracted_files_dir = UnzipUploadedFile(uploaded_template).extract_zipped_file()
             finalOutput =  generateLinearDictionaryOfTemplate(extracted_files_dir)
 
             # upload
